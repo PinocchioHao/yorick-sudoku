@@ -5,6 +5,8 @@ const STORAGE_KEY = 'sudoku_game_state';
 
 const generateEmptyMatrix = (val) => Array(9).fill(null).map(() => Array(9).fill(val));
 const generateEmptyArray = (val) => Array(9).fill(val);
+// 【新增】生成空的草稿矩阵（每个格子存放一个数组）
+const generateEmptyNotes = () => Array(9).fill(null).map(() => Array(9).fill([]));
 
 export function useSudoku() {
   const [board, setBoard] = useState(generateEmptyMatrix(0));
@@ -12,25 +14,26 @@ export function useSudoku() {
   const [answer, setAnswer] = useState(generateEmptyMatrix(0));
   const [difficulty, setDifficulty] = useState('medium');
 
-  // 【新增】自定义颜色与行列草稿状态
   const [colors, setColors] = useState(generateEmptyMatrix(null));
   const [rowDrafts, setRowDrafts] = useState(generateEmptyArray(''));
   const [colDrafts, setColDrafts] = useState(generateEmptyArray(''));
+  // 【新增】内嵌笔记状态
+  const [notes, setNotes] = useState(generateEmptyNotes());
 
   const [selectedCell, setSelectedCell] = useState({ row: null, col: null });
   const [history, setHistory] = useState([]);
   const [errors, setErrors] = useState(generateEmptyMatrix(false));
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // 【核心】将当前所有状态打包存入历史（用于完美的撤销功能）
   const saveHistory = useCallback(() => {
     setHistory(prev => [...prev, {
       board: board.map(r => [...r]),
       colors: colors.map(r => [...r]),
+      notes: notes.map(r => r.map(c => [...c])), // 存入笔记
       rowDrafts: [...rowDrafts],
       colDrafts: [...colDrafts]
     }]);
-  }, [board, colors, rowDrafts, colDrafts]);
+  }, [board, colors, notes, rowDrafts, colDrafts]);
 
   const initGame = useCallback((newDifficulty = 'medium', isNewGame = true) => {
     setDifficulty(newDifficulty);
@@ -41,6 +44,7 @@ export function useSudoku() {
       setInitialBoard(puzzle.map(row => [...row]));
       setAnswer(correctAnswer.map(row => [...row]));
       setColors(generateEmptyMatrix(null));
+      setNotes(generateEmptyNotes());
       setRowDrafts(generateEmptyArray(''));
       setColDrafts(generateEmptyArray(''));
       setHistory([]);
@@ -56,10 +60,10 @@ export function useSudoku() {
           setAnswer(parsed.answer);
           setDifficulty(parsed.difficulty);
           setColors(parsed.colors || generateEmptyMatrix(null));
+          setNotes(parsed.notes || generateEmptyNotes()); // 读取笔记
           setRowDrafts(parsed.rowDrafts || generateEmptyArray(''));
           setColDrafts(parsed.colDrafts || generateEmptyArray(''));
 
-          // 兼容旧版本的 history 格式（如果是纯数组，则清空避免崩溃）
           if (parsed.history && parsed.history.length > 0 && Array.isArray(parsed.history[0])) {
             setHistory([]);
           } else {
@@ -83,12 +87,12 @@ export function useSudoku() {
     if (isLoaded && board && board[0] && board[0].length === 9) {
       const gameState = {
         board, initialBoard, answer, difficulty, history, errors,
-        colors, rowDrafts, colDrafts, // 存档也要存入颜色和草稿
+        colors, notes, rowDrafts, colDrafts,
         timestamp: new Date().toISOString()
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(gameState));
     }
-  }, [board, initialBoard, answer, difficulty, history, errors, colors, rowDrafts, colDrafts, isLoaded]);
+  }, [board, initialBoard, answer, difficulty, history, errors, colors, notes, rowDrafts, colDrafts, isLoaded]);
 
   // --- 操作功能 ---
 
@@ -102,7 +106,11 @@ export function useSudoku() {
     newBoard[row][col] = value;
     setBoard(newBoard);
 
-    // 如果是清除操作(0)，同时清除颜色
+    // 【新增】无论填入数字还是擦除(0)，都把该格子的笔记清空
+    const newNotes = notes.map(r => r.map(c => [...c]));
+    newNotes[row][col] = [];
+    setNotes(newNotes);
+
     if (value === 0) {
       const newColors = colors.map(r => [...r]);
       newColors[row][col] = null;
@@ -115,19 +123,33 @@ export function useSudoku() {
       setErrors(newErrors);
     }
     return { success: true };
-  }, [board, answer, initialBoard, errors, colors, saveHistory]);
+  }, [board, answer, initialBoard, errors, colors, notes, saveHistory]);
 
-  // 【新增】设置格子颜色
   const setCellColor = useCallback((row, col, color) => {
-    if (row >= 9 || col >= 9) return; // 草稿区不染色
+    if (row >= 9 || col >= 9) return;
     saveHistory();
     const newColors = colors.map(r => [...r]);
-    // 如果点相同的颜色，则取消染色
     newColors[row][col] = newColors[row][col] === color ? null : color;
     setColors(newColors);
   }, [colors, saveHistory]);
 
-  // 【新增】切换草稿区的数字
+  // 【新增】内嵌笔记逻辑
+  const toggleNote = useCallback((row, col, value) => {
+    if (row >= 9 || col >= 9) return;
+    if (board[row][col] !== 0) return; // 只有空格子才能记笔记
+
+    saveHistory();
+    const newNotes = notes.map(r => r.map(c => [...c]));
+    const cellNotes = newNotes[row][col];
+
+    if (cellNotes.includes(value)) {
+      newNotes[row][col] = cellNotes.filter(n => n !== value); // 有则删
+    } else {
+      newNotes[row][col] = [...cellNotes, value].sort(); // 无则加并排序
+    }
+    setNotes(newNotes);
+  }, [board, notes, saveHistory]);
+
   const toggleDraft = useCallback((type, index, value) => {
     saveHistory();
     const strVal = value.toString();
@@ -136,7 +158,7 @@ export function useSudoku() {
         const newDrafts = [...prev];
         let current = newDrafts[index];
         current = current.includes(strVal) ? current.replace(strVal, '') : current + strVal;
-        newDrafts[index] = current.split('').sort().join(''); // 自动排序，例如 "312" -> "123"
+        newDrafts[index] = current.split('').sort().join('');
         return newDrafts;
       });
     } else {
@@ -150,7 +172,6 @@ export function useSudoku() {
     }
   }, [saveHistory]);
 
-  // 【新增】一键清空草稿格子
   const clearDraft = useCallback((type, index) => {
     saveHistory();
     if (type === 'row') {
@@ -160,12 +181,11 @@ export function useSudoku() {
     }
   }, [saveHistory]);
 
-  // --- 控制功能 ---
-
   const restartCurrentGame = useCallback(() => {
     if (!initialBoard || !initialBoard[0]) return;
     setBoard(initialBoard.map(row => [...row]));
     setColors(generateEmptyMatrix(null));
+    setNotes(generateEmptyNotes()); // 清空笔记
     setRowDrafts(generateEmptyArray(''));
     setColDrafts(generateEmptyArray(''));
     setHistory([]);
@@ -194,11 +214,12 @@ export function useSudoku() {
     const previousState = history[history.length - 1];
     setBoard(previousState.board);
     setColors(previousState.colors);
+    setNotes(previousState.notes); // 恢复笔记
     setRowDrafts(previousState.rowDrafts);
     setColDrafts(previousState.colDrafts);
 
     setHistory(prev => prev.slice(0, -1));
-    setErrors(generateEmptyMatrix(false)); // 撤销时清空红框
+    setErrors(generateEmptyMatrix(false));
   }, [history]);
 
   const getHint = useCallback((row, col) => {
@@ -221,9 +242,9 @@ export function useSudoku() {
 
   return {
     isLoaded, board, initialBoard, answer, difficulty, history, errors,
-    colors, rowDrafts, colDrafts, // 抛出新状态
+    colors, notes, rowDrafts, colDrafts,
     selectedCell, setSelectedCell, initGame, setCellValue, isGameComplete,
-    setCellColor, toggleDraft, clearDraft, // 抛出新方法
+    setCellColor, toggleNote, toggleDraft, clearDraft,
     undo, getHint, restartCurrentGame, checkBoard
   };
 }

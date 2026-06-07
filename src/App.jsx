@@ -6,9 +6,9 @@ import SudokuBoard from './components/SudokuBoard';
 export default function App() {
   const {
     isLoaded, board, initialBoard, answer, errors,
-    colors, rowDrafts, colDrafts, // 获取新状态
+    colors, notes, rowDrafts, colDrafts,  // 👈 新增 notes
     selectedCell, setSelectedCell, difficulty, initGame, setCellValue,
-    setCellColor, toggleDraft, clearDraft, // 获取新方法
+    setCellColor, toggleNote, toggleDraft, clearDraft, // 👈 新增 toggleNote
     isGameComplete, undo, history, getHint,
     restartCurrentGame, checkBoard
   } = useSudoku();
@@ -91,7 +91,9 @@ export default function App() {
 
               {/* 右侧：功能控制按钮组 */}
               {/* 手机上变成 3列+2列 的整齐网格，Pad/电脑上恢复成横向单排 */}
-              <div className="grid grid-cols-3 sm:flex sm:flex-wrap gap-2 w-full sm:w-auto justify-center sm:justify-end">                <button onClick={undo} disabled={history.length === 0}
+              <div
+                  className="grid grid-cols-3 sm:flex sm:flex-wrap gap-2 w-full sm:w-auto justify-center sm:justify-end">
+                <button onClick={undo} disabled={history.length === 0}
                         className={`px-3 py-2 rounded-md font-semibold transition-all shadow-sm flex items-center gap-1 ${history.length === 0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-amber-100 text-amber-700 hover:bg-amber-200 active:scale-95'}`}>
                   ↩️ 撤销
                 </button>
@@ -136,6 +138,7 @@ export default function App() {
               answer={answer}
               errors={errors}
               colors={colors}
+              notes={notes}                 // 👈 传进这里
               rowDrafts={rowDrafts}
               colDrafts={colDrafts}
               selectedCell={selectedCell}
@@ -143,6 +146,7 @@ export default function App() {
               initGame={initGame}
               setCellValue={setCellValue}
               setCellColor={setCellColor}
+              toggleNote={toggleNote}       // 👈 传进这里
               toggleDraft={toggleDraft}
               clearDraft={clearDraft}
           />
