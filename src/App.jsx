@@ -5,10 +5,12 @@ import SudokuBoard from './components/SudokuBoard';
 
 export default function App() {
   const {
-    isLoaded, board, initialBoard, answer, errors, // 增加解构
+    isLoaded, board, initialBoard, answer, errors,
+    colors, rowDrafts, colDrafts, // 获取新状态
     selectedCell, setSelectedCell, difficulty, initGame, setCellValue,
+    setCellColor, toggleDraft, clearDraft, // 获取新方法
     isGameComplete, undo, history, getHint,
-    restartCurrentGame, checkBoard // 获取新增的两个方法
+    restartCurrentGame, checkBoard
   } = useSudoku();
 
   const { formatTime, resetTimer } = useTimer(!isGameComplete() && isLoaded);
@@ -62,7 +64,8 @@ export default function App() {
               <h1 className="text-2xl sm:text-4xl font-bold text-gray-800">
                 Fan 专属数独
               </h1>
-              <div className="bg-indigo-50 border border-indigo-100 text-indigo-700 px-4 py-2 rounded-lg font-mono text-xl sm:text-2xl font-bold shadow-inner">
+              <div
+                  className="bg-indigo-50 border border-indigo-100 text-indigo-700 px-4 py-2 rounded-lg font-mono text-xl sm:text-2xl font-bold shadow-inner">
                 ⏱ {formatTime()}
               </div>
             </div>
@@ -87,23 +90,28 @@ export default function App() {
 
               {/* 右侧：功能控制按钮组 */}
               <div className="flex flex-wrap gap-2 w-full md:w-auto justify-end">
-                <button onClick={undo} disabled={history.length === 0} className={`px-3 py-2 rounded-md font-semibold transition-all shadow-sm flex items-center gap-1 ${history.length === 0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-amber-100 text-amber-700 hover:bg-amber-200 active:scale-95'}`}>
+                <button onClick={undo} disabled={history.length === 0}
+                        className={`px-3 py-2 rounded-md font-semibold transition-all shadow-sm flex items-center gap-1 ${history.length === 0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-amber-100 text-amber-700 hover:bg-amber-200 active:scale-95'}`}>
                   ↩️ 撤销
                 </button>
 
-                <button onClick={handleHintClick} className="px-3 py-2 bg-purple-100 text-purple-700 rounded-md font-semibold hover:bg-purple-200 transition-all shadow-sm active:scale-95 flex items-center gap-1">
+                <button onClick={handleHintClick}
+                        className="px-3 py-2 bg-purple-100 text-purple-700 rounded-md font-semibold hover:bg-purple-200 transition-all shadow-sm active:scale-95 flex items-center gap-1">
                   💡 提示
                 </button>
 
-                <button onClick={handleCheckClick} className="px-3 py-2 bg-sky-100 text-sky-700 rounded-md font-semibold hover:bg-sky-200 transition-all shadow-sm active:scale-95 flex items-center gap-1">
+                <button onClick={handleCheckClick}
+                        className="px-3 py-2 bg-sky-100 text-sky-700 rounded-md font-semibold hover:bg-sky-200 transition-all shadow-sm active:scale-95 flex items-center gap-1">
                   🔍 校验
                 </button>
 
-                <button onClick={handleRestartCurrent} className="px-3 py-2 bg-orange-100 text-orange-700 rounded-md font-semibold hover:bg-orange-200 transition-all shadow-sm active:scale-95 flex items-center gap-1">
+                <button onClick={handleRestartCurrent}
+                        className="px-3 py-2 bg-orange-100 text-orange-700 rounded-md font-semibold hover:bg-orange-200 transition-all shadow-sm active:scale-95 flex items-center gap-1">
                   🔁 重玩本局
                 </button>
 
-                <button onClick={handleRestartNew} className="px-3 py-2 bg-emerald-500 text-white rounded-md font-semibold hover:bg-emerald-600 transition-all shadow-sm active:scale-95 flex items-center gap-1">
+                <button onClick={handleRestartNew}
+                        className="px-3 py-2 bg-emerald-500 text-white rounded-md font-semibold hover:bg-emerald-600 transition-all shadow-sm active:scale-95 flex items-center gap-1">
                   🆕 新局
                 </button>
               </div>
@@ -111,7 +119,8 @@ export default function App() {
 
             {isGameComplete() && (
                 <div className="mt-4 text-center">
-                  <div className="inline-block bg-green-100 border-2 border-green-500 text-green-700 px-6 py-3 rounded-xl font-bold text-xl animate-bounce shadow-lg">
+                  <div
+                      className="inline-block bg-green-100 border-2 border-green-500 text-green-700 px-6 py-3 rounded-xl font-bold text-xl animate-bounce shadow-lg">
                     🎉 太棒了，挑战成功！用时：{formatTime()}
                   </div>
                 </div>
@@ -125,10 +134,16 @@ export default function App() {
               initialBoard={initialBoard}
               answer={answer}
               errors={errors}
+              colors={colors}
+              rowDrafts={rowDrafts}
+              colDrafts={colDrafts}
               selectedCell={selectedCell}
               setSelectedCell={setSelectedCell}
               initGame={initGame}
               setCellValue={setCellValue}
+              setCellColor={setCellColor}
+              toggleDraft={toggleDraft}
+              clearDraft={clearDraft}
           />
         </div>
       </div>
