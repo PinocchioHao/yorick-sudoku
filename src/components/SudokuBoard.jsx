@@ -211,12 +211,12 @@ export default function SudokuBoard({
                 </div>
 
                 {/* 虚拟键盘 */}
-                <div className="grid grid-cols-5 gap-2 sm:gap-3 mb-3">
+                <div className="grid grid-cols-5 gap-1.5 sm:gap-3 mb-2 sm:mb-3">
                     {[1, 2, 3, 4, 5].map((num) => {
                         const isCompleted = numberCounts[num] >= 9;
                         return (
                             <button key={num} onClick={() => handleKeypadClick(num)}
-                                    className={`h-14 sm:h-16 rounded-lg text-2xl font-bold shadow-md transition-all duration-150 active:scale-95
+                                    className={`h-12 sm:h-16 rounded-lg text-xl sm:text-2xl font-bold shadow-md transition-all duration-150 active:scale-95
                   ${activeNumber === num ? 'bg-indigo-500 text-white ring-2 ring-offset-2 ring-indigo-500 scale-105' : 'bg-white text-slate-800 hover:bg-indigo-50'}
                   ${isCompleted ? 'opacity-40 grayscale pointer-events-none' : ''}`}
                             >
@@ -225,12 +225,12 @@ export default function SudokuBoard({
                         );
                     })}
                 </div>
-                <div className="grid grid-cols-5 gap-2 sm:gap-3">
+                <div className="grid grid-cols-5 gap-1.5 sm:gap-3 mb-2 sm:mb-3">
                     {[6, 7, 8, 9].map((num) => {
                         const isCompleted = numberCounts[num] >= 9;
                         return (
                             <button key={num} onClick={() => handleKeypadClick(num)}
-                                    className={`h-14 sm:h-16 rounded-lg text-2xl font-bold shadow-md transition-all duration-150 active:scale-95
+                                    className={`h-12 sm:h-16 rounded-lg text-xl sm:text-2xl font-bold shadow-md transition-all duration-150 active:scale-95
                   ${activeNumber === num ? 'bg-indigo-500 text-white ring-2 ring-offset-2 ring-indigo-500 scale-105' : 'bg-white text-slate-800 hover:bg-indigo-50'}
                   ${isCompleted ? 'opacity-40 grayscale pointer-events-none' : ''}`}
                             >

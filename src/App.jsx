@@ -57,12 +57,13 @@ export default function App() {
   }
 
   return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 pb-10">
+      // 适配手机，干掉下拉刷新
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 pb-10 overscroll-none touch-pan-y">
         <div className="bg-white shadow-md sticky top-0 z-10">
           <div className="max-w-6xl mx-auto px-4 py-4 sm:py-6">
             <div className="flex justify-between items-center mb-4 sm:mb-6">
               <h1 className="text-2xl sm:text-4xl font-bold text-gray-800">
-                Fan 专属数独
+                FanNike宝数独
               </h1>
               <div
                   className="bg-indigo-50 border border-indigo-100 text-indigo-700 px-4 py-2 rounded-lg font-mono text-xl sm:text-2xl font-bold shadow-inner">
@@ -89,8 +90,8 @@ export default function App() {
               </div>
 
               {/* 右侧：功能控制按钮组 */}
-              <div className="flex flex-wrap gap-2 w-full md:w-auto justify-end">
-                <button onClick={undo} disabled={history.length === 0}
+              {/* 手机上变成 3列+2列 的整齐网格，Pad/电脑上恢复成横向单排 */}
+              <div className="grid grid-cols-3 sm:flex sm:flex-wrap gap-2 w-full sm:w-auto justify-center sm:justify-end">                <button onClick={undo} disabled={history.length === 0}
                         className={`px-3 py-2 rounded-md font-semibold transition-all shadow-sm flex items-center gap-1 ${history.length === 0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-amber-100 text-amber-700 hover:bg-amber-200 active:scale-95'}`}>
                   ↩️ 撤销
                 </button>
@@ -107,7 +108,7 @@ export default function App() {
 
                 <button onClick={handleRestartCurrent}
                         className="px-3 py-2 bg-orange-100 text-orange-700 rounded-md font-semibold hover:bg-orange-200 transition-all shadow-sm active:scale-95 flex items-center gap-1">
-                  🔁 重玩本局
+                  🔁 重玩
                 </button>
 
                 <button onClick={handleRestartNew}
