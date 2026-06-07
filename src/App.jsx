@@ -79,7 +79,7 @@ export default function App() {
 
                   {/* 个性化表情包：放入 public 文件夹中的图片 */}
                   <img
-                      src="/public/meme.png"
+                      src="/meme.png"  // 放在public目录下的文件不需要加一层/public
                       alt="Fan"
                       className="w-12 h-12 rounded-full shadow-sm object-cover bg-indigo-50 border-2 border-indigo-200"
                       onError={(e) => {
