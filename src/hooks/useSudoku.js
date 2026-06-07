@@ -232,9 +232,16 @@ export function useSudoku() {
 
   const isGameComplete = useCallback(() => {
     if (!board || !answer || board[0][0] === undefined) return false;
+
+    // 【关键修复】如果答案矩阵还是初始化的 0，说明真正的数据还没加载，直接返回 false
+    if (answer[0][0] === 0) return false;
+
     for (let i = 0; i < 9; i++) {
       for (let j = 0; j < 9; j++) {
-        if (board[i][j] !== answer[i][j]) return false;
+        // 【关键修复】只要盘面里还有 0（说明还没填满），或者填的数字和答案不一样，就没完成
+        if (board[i][j] === 0 || board[i][j] !== answer[i][j]) {
+          return false;
+        }
       }
     }
     return true;
