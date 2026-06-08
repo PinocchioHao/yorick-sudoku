@@ -193,12 +193,15 @@ export function useSudoku() {
     setSelectedCell({ row: null, col: null });
   }, [initialBoard]);
 
+
+// 恢复绝对的真理校验：直接对比 answer
   const checkBoard = useCallback(() => {
     if (!board || !answer) return;
     const newErrors = generateEmptyMatrix(false);
     let hasError = false;
     for (let r = 0; r < 9; r++) {
       for (let c = 0; c < 9; c++) {
+        // 只要填了，且跟最终唯一答案不一样，就是错的（防止玩家走入死胡同）
         if (board[r][c] !== 0 && board[r][c] !== answer[r][c]) {
           newErrors[r][c] = true;
           hasError = true;
@@ -232,16 +235,11 @@ export function useSudoku() {
 
   const isGameComplete = useCallback(() => {
     if (!board || !answer || board[0][0] === undefined) return false;
-
-    // 【关键修复】如果答案矩阵还是初始化的 0，说明真正的数据还没加载，直接返回 false
     if (answer[0][0] === 0) return false;
 
     for (let i = 0; i < 9; i++) {
       for (let j = 0; j < 9; j++) {
-        // 【关键修复】只要盘面里还有 0（说明还没填满），或者填的数字和答案不一样，就没完成
-        if (board[i][j] === 0 || board[i][j] !== answer[i][j]) {
-          return false;
-        }
+        if (board[i][j] !== answer[i][j]) return false;
       }
     }
     return true;

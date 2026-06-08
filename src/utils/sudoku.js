@@ -1,97 +1,122 @@
-// // 检查数字是否能放在指定位置
-function isValid(board, row, col, num) {
-  // 检查行
+// src/utils/sudoku.js
+
+// 基础规则校验：检查当前数字在行列宫是否合法
+export const isValid = (board, row, col, num) => {
   for (let i = 0; i < 9; i++) {
-    if (board[row][i] === num) return false;
-  }
+    // 检查行和列
+    if (board[row][i] === num && i !== col) return false;
+    if (board[i][col] === num && i !== row) return false;
 
-  // 检查列
-  for (let i = 0; i < 9; i++) {
-    if (board[i][col] === num) return false;
+    // 检查九宫格
+    const boxRow = Math.floor(row / 3) * 3 + Math.floor(i / 3);
+    const boxCol = Math.floor(col / 3) * 3 + (i % 3);
+    if (board[boxRow][boxCol] === num && (boxRow !== row || boxCol !== col)) return false;
   }
-
-  // 检查 3x3 宫格
-  const boxRow = Math.floor(row / 3) * 3;
-  const boxCol = Math.floor(col / 3) * 3;
-  for (let i = boxRow; i < boxRow + 3; i++) {
-    for (let j = boxCol; j < boxCol + 3; j++) {
-      if (board[i][j] === num) return false;
-    }
-  }
-
   return true;
-}
+};
 
-// 使用回溯算法生成完整的数独终盘
-function generateSudoku() {
-  const board = Array(9).fill(null).map(() => Array(9).fill(0));
+// 工具：打乱数组（用于生成随机终盘）
+const shuffle = (array) => {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+};
 
-  function backtrack() {
-    // 找到下一个空格
-    for (let row = 0; row < 9; row++) {
-      for (let col = 0; col < 9; col++) {
-        if (board[row][col] === 0) {
-          // 随机尝试 1-9
-          const nums = [1, 2, 3, 4, 5, 6, 7, 8, 9].sort(() => Math.random() - 0.5);
-
-          for (const num of nums) {
-            if (isValid(board, row, col, num)) {
-              board[row][col] = num;
-
-              if (backtrack()) return true;
-
-              board[row][col] = 0;
-            }
+// 核心算法 1：DFS 生成一个完美的随机完整棋盘 (终盘)
+const fillBoard = (board) => {
+  for (let row = 0; row < 9; row++) {
+    for (let col = 0; col < 9; col++) {
+      if (board[row][col] === 0) {
+        const nums = shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+        for (let num of nums) {
+          if (isValid(board, row, col, num)) {
+            board[row][col] = num;
+            if (fillBoard(board)) return true;
+            board[row][col] = 0; // 回溯
           }
-
-          return false;
         }
+        return false; // 走不通
       }
     }
-    return true;
   }
+  return true; // 填满了
+};
 
-  backtrack();
-  return board;
-}
+// 核心算法 2：求解器，用于计算当前残局有多少个解
+const countSolutions = (board, countObj) => {
+  for (let row = 0; row < 9; row++) {
+    for (let col = 0; col < 9; col++) {
+      if (board[row][col] === 0) {
+        for (let num = 1; num <= 9; num++) {
+          if (isValid(board, row, col, num)) {
+            board[row][col] = num;
+            countSolutions(board, countObj);
+            // 优化：只要发现解的数量大于 1，立刻停止搜索（我们不需要知道具体有几个解，只要知道不是唯一解就行）
+            if (countObj.count > 1) {
+              board[row][col] = 0;
+              return;
+            }
+            board[row][col] = 0;
+          }
+        }
+        return;
+      }
+    }
+  }
+  countObj.count++;
+};
 
-// 深拷贝二维数组
-function deepCopyBoard(board) {
-  return board.map(row => [...row]);
-}
+// 终极生成器：带唯一解校验的挖洞算法
+export const generatePuzzle = (difficulty) => {
+  // 1. 生成空盘并填满
+  const answer = Array(9).fill(null).map(() => Array(9).fill(0));
+  fillBoard(answer);
 
-// 根据难度挖空生成题目
-function generatePuzzle(difficulty = 'medium') {
-  const answer = generateSudoku();
-  const puzzle = deepCopyBoard(answer);
+  // 2. 复制一份用来挖洞
+  const puzzle = answer.map(row => [...row]);
 
-  // 定义难度对应的挖空数量
-  const difficultyMap = {
-    easy: 35,      // 简单：挖 35 个空
-    medium: 45,    // 中等：挖 45 个空
-    hard: 55       // 困难：挖 55 个空
-  };
+  // 根据难度设定需要挖掉的孔洞数量
+  let holesToDig = 0;
+  if (difficulty === 'easy') holesToDig = 30; // 简单留 51 个数字
+  else if (difficulty === 'medium') holesToDig = 45; // 中等留 36 个数字
+  else holesToDig = 55; // 困难留 26 个数字
 
-  const cellsToRemove = difficultyMap[difficulty] || difficultyMap.medium;
-  let removed = 0;
+  // 记录所有可以挖的坐标，打乱顺序尝试
+  const positions = [];
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 9; c++) {
+      positions.push({ r, c });
+    }
+  }
+  shuffle(positions);
 
-  while (removed < cellsToRemove) {
-    const row = Math.floor(Math.random() * 9);
-    const col = Math.floor(Math.random() * 9);
+  // 3. 开始极其严谨的挖洞过程
+  for (let pos of positions) {
+    if (holesToDig <= 0) break;
 
-    if (puzzle[row][col] !== 0) {
-      puzzle[row][col] = 0;
-      removed++;
+    const { r, c } = pos;
+    const backup = puzzle[r][c];
+
+    // 抠掉这个洞
+    puzzle[r][c] = 0;
+
+    // 严厉校验：抠掉之后，这个残局还是不是唯一解？
+    let solutionCount = { count: 0 };
+    // 拷贝一份当前残局丢进求解器
+    const tempBoardForSolving = puzzle.map(row => [...row]);
+    countSolutions(tempBoardForSolving, solutionCount);
+
+    if (solutionCount.count === 1) {
+      // 成功！这个洞挖得好，确实只有一个解
+      holesToDig--;
+    } else {
+      // 失败！挖掉这个洞会导致多解，赶紧把它填回去
+      puzzle[r][c] = backup;
     }
   }
 
-  return {
-    puzzle,
-    answer
-  };
-}
-
-// 导出函数
-export { generateSudoku, generatePuzzle, isValid };
-
-// 请帮我用 JavaScript 写一个数独核心算法。需要包含：1. 使用回溯算法（DFS）生成一个完整的、合法的 9x9 数独终盘数组；2. 编写一个根据难度（简单、中等、困难）随机挖空的函数，返回一个带有空格（用 0 表示）的题目数组和对应的答案数组。
+  // 返回生成的残局和它对应的唯一正确答案
+  return { puzzle, answer };
+};
