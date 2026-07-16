@@ -5,7 +5,7 @@ import { locales } from '../locales';
 const I18nContext = createContext();
 
 export function I18nProvider({ children }) {
-    // 默认使用中文，你可以根据需求甚至读取浏览器的默认语言
+    // 默认使用英文，你可以根据需求甚至读取浏览器的默认语言
     const [language, setLanguage] = useState('en');
 
     const toggleLanguage = useCallback(() => {

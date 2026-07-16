@@ -35,7 +35,7 @@ export const locales = {
         }
     },
     en: {
-        appTitle: "Sudoku",
+        appTitle: "Fanfan VS Sudoku",
         generating: 'Generating board...',
         loading: 'Loading saved game...',
         difficulty: {

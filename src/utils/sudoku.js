@@ -68,7 +68,7 @@ const countSolutions = (board, countObj) => {
   countObj.count++;
 };
 
-// 终极生成器：带唯一解校验的挖洞算法
+// 生成器：带唯一解校验的挖洞算法
 export const generatePuzzle = (difficulty) => {
   // 1. 生成空盘并填满
   const answer = Array(9).fill(null).map(() => Array(9).fill(0));
