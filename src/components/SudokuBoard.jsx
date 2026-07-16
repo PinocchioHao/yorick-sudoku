@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useI18n } from '../hooks/useI18n';
 
 export default function SudokuBoard({
                                         board, answer, initialBoard, errors,
@@ -8,7 +9,7 @@ export default function SudokuBoard({
                                     }) {
     const [activeNumber, setActiveNumber] = useState(null);
     const [isNotesMode, setIsNotesMode] = useState(false);
-
+    const { t } = useI18n();
     const numberCounts = useMemo(() => {
         const counts = Array(10).fill(0);
         if (board && board.length === 9) {
@@ -22,7 +23,7 @@ export default function SudokuBoard({
     }, [board]);
 
     if (!board || board.length === 0 || !answer || answer.length === 0) {
-        return <div className="text-xl font-bold text-gray-500 animate-pulse">正在生成棋盘...</div>;
+        return <div className="text-xl font-bold text-gray-500 animate-pulse">{t('generating')}</div>;
     }
 
     const isInitialCell = (row, col) => {
@@ -201,7 +202,7 @@ export default function SudokuBoard({
             <div className="w-full max-w-md px-2">
                 <div className="flex items-center justify-between bg-white px-4 py-3 rounded-xl shadow-sm mb-4 border border-slate-100">
                     <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-slate-600">标记：</span>
+                        <span className="text-sm font-bold text-slate-600">{t('boardInfo.marks')}</span>
                         <div className="flex gap-2 sm:gap-3">
                             <button onClick={() => handleColorClick('bg-fuchsia-200')} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-fuchsia-200 ring-2 ring-transparent hover:ring-fuchsia-400 transition-all"></button>
                             <button onClick={() => handleColorClick('bg-yellow-200')} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-yellow-200 ring-2 ring-transparent hover:ring-yellow-400 transition-all"></button>
@@ -214,7 +215,7 @@ export default function SudokuBoard({
                         className={`flex items-center gap-1 px-4 py-1.5 rounded-full font-bold text-sm sm:text-base transition-all duration-200
               ${isNotesMode ? 'bg-slate-800 text-white shadow-md scale-105' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                     >
-                        ✏️ 笔记 {isNotesMode ? 'ON' : 'OFF'}
+                        {t('boardInfo.notes')} {isNotesMode ? t('boardInfo.on') : t('boardInfo.off')}
                     </button>
                 </div>
 
@@ -246,7 +247,7 @@ export default function SudokuBoard({
                         );
                     })}
                     <button onClick={handleEraseClick} className="h-12 sm:h-16 rounded-lg bg-rose-100 text-rose-600 hover:bg-rose-200 text-xl font-bold shadow-md transition-all duration-150 active:scale-95 flex items-center justify-center">
-                        清除
+                        {t('actions.clear')}
                     </button>
                 </div>
             </div>
